@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import ReactMarkdown from "react-markdown";
-import { unstable_cache } from "next/cache";
 import type { PostDetail, Topic } from "@/types";
 import {
   Breadcrumb,
@@ -19,60 +18,57 @@ import {
 import { ScrollProgress } from "@/components/animate-ui/components/scroll-progress";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 
-const getPostWithCache = (slug: string) => {
-  return unstable_cache(
-    async (): Promise<PostDetail | null> => {
-      try {
-        const postsCollection = firestore.collection("posts");
-        const querySnapshot = await postsCollection
-          .where("slug", "==", slug)
-          .select("title", "content", "createdAt", "image", "topicId")
-          .limit(1)
-          .get();
+// Hàm lấy tất cả slug để tạo các trang tĩnh
+export async function generateStaticParams() {
+  try {
+    const postsCollection = firestore.collection("posts");
+    const querySnapshot = await postsCollection.select("slug").get();
+    const slugs = querySnapshot.docs.map((doc) => ({
+      slug: doc.data().slug,
+    }));
+    return slugs;
+  } catch (error) {
+    console.error("Error fetching slugs for static params:", error);
+    return [];
+  }
+}
 
-        if (querySnapshot.empty) {
-          return null;
-        }
+async function getPost(slug: string): Promise<PostDetail | null> {
+  try {
+    const postsCollection = firestore.collection("posts");
+    const querySnapshot = await postsCollection
+      .where("slug", "==", slug)
+      .select("title", "content", "createdAt", "image", "topicId")
+      .limit(1)
+      .get();
 
-        const doc = querySnapshot.docs[0];
-        const data = doc.data()!;
-        return {
-          id: doc.id,
-          ...data,
-          createdAt: data.createdAt.toDate(),
-        } as PostDetail;
-      } catch (error) {
-        console.error("Error fetching post by slug:", error);
-        return null;
-      }
-    },
-    [`post-detail-${slug}`], // Cache key động với slug
-    {
-      revalidate: 3600, // 1 hour
-      tags: ["post"],
+    if (querySnapshot.empty) {
+      return null;
     }
-  );
-};
 
-const getTopicById = (topicId: string) => {
-  return unstable_cache(
-    async (): Promise<Topic | null> => {
-      try {
-        const topicDoc = await firestore
-          .collection("topics")
-          .doc(topicId)
-          .get();
-        if (!topicDoc.exists) return null;
-        return { id: topicDoc.id, ...topicDoc.data() } as Topic;
-      } catch (error) {
-        console.error("Error fetching topic by ID:", error);
-        return null;
-      }
-    },
-    [`topic-${topicId}`],
-    { revalidate: 3600, tags: ["topics"] }
-  );
-};
+    const doc = querySnapshot.docs[0];
+    const data = doc.data()!;
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data.createdAt.toDate(),
+    } as PostDetail;
+  } catch (error) {
+    console.error("Error fetching post by slug:", error);
+    return null;
+  }
+}
+
+async function getTopicById(topicId: string): Promise<Topic | null> {
+  try {
+    const topicDoc = await firestore.collection("topics").doc(topicId).get();
+    if (!topicDoc.exists) return null;
+    return { id: topicDoc.id, ...topicDoc.data() } as Topic;
+  } catch (error) {
+    console.error("Error fetching topic by ID:", error);
+    return null;
+  }
+}
 
 export default async function PostPage({
   params,
@@ -80,15 +76,13 @@ export default async function PostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const getPost = getPostWithCache(slug);
-  const post = await getPost();
+  const post = await getPost(slug);
 
   if (!post) {
     notFound();
   }
 
-  const getTopic = getTopicById(post.topicId);
-  const topic = await getTopic();
+  const topic = await getTopicById(post.topicId);
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-16">
