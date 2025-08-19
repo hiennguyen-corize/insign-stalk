@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import Header from "@/components/Header";
 import { Providers } from "@/app/providers";
 import { StarsBackgroundWrapper } from "@/components/StarsBackgroundWrapper";
 import { BackToTop } from "@/components/BackToTop";
+import { NavOverlay } from "@/components/NavOverlay";
+import { NavProgressListener } from "@/app/nav-progress-listener";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "InsightStalk",
@@ -33,6 +38,9 @@ export default function RootLayout({
             {/* Back to top button */}
             <BackToTop />
           </div>
+
+          <NavOverlay />
+          <NavProgressListener />
         </Providers>
       </body>
     </html>

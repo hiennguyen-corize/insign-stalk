@@ -2,7 +2,6 @@
 
 import { firestore } from "@/lib/firebaseAdmin";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { Home } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import ReactMarkdown from "react-markdown";
@@ -17,21 +16,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { ScrollProgress } from "@/components/animate-ui/components/scroll-progress";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
-
-// Hàm lấy tất cả slug để tạo các trang tĩnh
-export async function generateStaticParams() {
-  try {
-    const postsCollection = firestore.collection("posts");
-    const querySnapshot = await postsCollection.select("slug").get();
-    const slugs = querySnapshot.docs.map((doc) => ({
-      slug: doc.data().slug,
-    }));
-    return slugs;
-  } catch (error) {
-    console.error("Error fetching slugs for static params:", error);
-    return [];
-  }
-}
+import { InstantLink } from "@/components/InstantLink";
 
 async function getPost(slug: string): Promise<PostDetail | null> {
   try {
@@ -87,18 +72,19 @@ export default async function PostPage({
   return (
     <main className="max-w-4xl mx-auto px-4 py-16">
       <ScrollProgress />
+
       <div className="mb-8">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link
+                <InstantLink
                   href="/"
                   className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 >
                   <Home className="w-4 h-4" />
                   <span>Home</span>
-                </Link>
+                </InstantLink>
               </BreadcrumbLink>
             </BreadcrumbItem>
             {topic && (
@@ -106,7 +92,9 @@ export default async function PostPage({
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link href={`/?topic=${topic.slug}`}>{topic.name}</Link>
+                    <InstantLink href={`/?topic=${topic.slug}`}>
+                      {topic.name}
+                    </InstantLink>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
               </>
@@ -118,6 +106,7 @@ export default async function PostPage({
           </BreadcrumbList>
         </Breadcrumb>
       </div>
+
       <article className="bg-gray-50/80 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl p-8 transition-colors">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">

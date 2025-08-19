@@ -127,3 +127,31 @@ body {
 html {
   scroll-behavior: smooth;
 }
+
+/* Nav Overlay Layers */
+.nav-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 999999;
+}
+
+.nav-overlay .layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: translateX(100%);
+  will-change: transform;
+  transition: none; /* Tắt CSS transition để GSAP hoạt động */
+}
+
+.nav-overlay .layer:nth-child(1) { z-index: 1001; }
+.nav-overlay .layer:nth-child(2) { z-index: 1002; }
+.nav-overlay .layer:nth-child(3) { z-index: 1003; }
+.nav-overlay .layer:nth-child(4) { z-index: 1004; }
+.nav-overlay .layer:nth-child(5) { z-index: 1005; }

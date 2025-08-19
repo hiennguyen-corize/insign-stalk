@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -10,17 +10,22 @@ import {
 } from "@/components/ui/select";
 import type { FilterControlsProps } from "@/types";
 import { Suspense } from "react";
+import { useAppDispatch } from "@/lib/hooks";
+import { start } from "@/lib/features/navProgressSlice";
 
 export function FilterControls({
   topics,
   currentTopic,
   currentSort,
 }: FilterControlsProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const handleValueChange = (key: "topic" | "sort", value: string) => {
-    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    const current = new URLSearchParams(
+      Array.from(searchParams?.entries() || [])
+    );
 
     if (key === "topic" && value === "all") {
       current.delete("topic");
@@ -34,6 +39,10 @@ export function FilterControls({
     const search = current.toString();
     const query = search ? `?${search}` : "";
 
+    // Start navigation loading
+    dispatch(start());
+
+    // Navigate using router.push
     router.push(`/${query}`);
   };
 
